@@ -1,6 +1,8 @@
-import PyQt4.QtGui as gui
 import sys
-from main_window import MainWindow
+
+import PyQt4.QtGui as gui
+
+from ui.main_window import MainWindow
 
 
 def main():

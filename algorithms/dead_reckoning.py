@@ -1,5 +1,6 @@
-from probability_utils import sample_normal
 import math
+
+from utils.probability_utils import sample_normal
 
 
 class DeadReckoning:
@@ -61,9 +62,9 @@ class DeadReckoning:
         return all_points
 
     def sample_point(self, x, y, v, w, theta, delta_t):
-        v_prime = v + sample_normal(self.a_values[0] * v + self.a_values[1] * w)
-        w_prime = w + sample_normal(self.a_values[2] * v + self.a_values[3] * w)
-        err = sample_normal(self.a_values[4] * v + self.a_values[5] * w)
+        v_prime = v + sample_normal(0, self.a_values[0] * v + self.a_values[1] * w)
+        w_prime = w + sample_normal(0, self.a_values[2] * v + self.a_values[3] * w)
+        err = sample_normal(0, self.a_values[4] * v + self.a_values[5] * w)
 
         x_prime = x - (v_prime/w_prime)*(math.sin(theta) - math.sin(theta + w_prime * delta_t))
         y_prime = y + (v_prime/w_prime)*(math.cos(theta) - math.cos(theta + w_prime * delta_t))
