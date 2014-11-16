@@ -22,3 +22,8 @@ def eval_normal(x, mu, sigma):
 
 def sample_bivariate_normal(mu, sigma):
     return np.random.multivariate_normal(mu, sigma)
+
+
+def get_random_element(elm_list):
+    length_of_list = len(elm_list)
+    return elm_list[int(sample_uniform() * length_of_list)]

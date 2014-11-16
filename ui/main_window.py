@@ -12,17 +12,16 @@ class MainWindow():
         self.canvas = FigureCanvas(self.figure)
         self.init_gui()
 
-
     def init_gui(self):
         self.init_canvas()
         self.init_common_frame()
         self.init_execution_parameters_frame()
 
-        self.eval_type_button_selected()
-
         self.main_window.setGeometry(100, 100, 1024, 768)
         self.main_window.setFixedSize(1024, 768)
         self.main_window.setWindowTitle('Probabilistic Robotics')
+
+        self.reset_canvas()
 
     def init_canvas(self):
         self.canvas.setParent(self.main_window)
@@ -34,21 +33,22 @@ class MainWindow():
         common_frame.setFrameStyle(gui.QFrame.Box)
         common_frame.setGeometry(10, 500, 240, 220)
 
-        eval_type_frame = gui.QFrame(common_frame)
-        eval_type_frame.setFrameStyle(gui.QFrame.Box)
-        eval_type_frame.setGeometry(10, 10, 220, 70)
+        shape_frame = gui.QFrame(common_frame)
+        shape_frame.setFrameStyle(gui.QFrame.Box)
+        shape_frame.setGeometry(10, 10, 220, 70)
 
-        self.eval_type_group = gui.QButtonGroup(eval_type_frame)
+        self.shape_group = gui.QButtonGroup(shape_frame)
 
-        self.sampled_execution = gui.QRadioButton('Sampled', eval_type_frame)
-        self.sampled_execution.setGeometry(5, 5, 150, 30)
-        self.sampled_execution.clicked.connect(self.eval_type_button_selected)
-        self.eval_type_group.addButton(self.sampled_execution)
+        self.shape_rectangular = gui.QRadioButton('Rectangular', shape_frame)
+        self.shape_rectangular.setGeometry(5, 5, 150, 30)
+        self.shape_group.addButton(self.shape_rectangular)
 
-        self.direct_evaluation = gui.QRadioButton('Direct', eval_type_frame)
-        self.direct_evaluation.setGeometry(5, 35, 150, 30)
-        self.direct_evaluation.clicked.connect(self.eval_type_button_selected)
-        self.eval_type_group.addButton(self.direct_evaluation)
+        self.shape_circular = gui.QRadioButton('Circular', shape_frame)
+        self.shape_circular.setGeometry(5, 35, 150, 30)
+        self.shape_group.addButton(self.shape_circular)
+
+        self.enable_sensors = gui.QCheckBox('Enable sensors', common_frame)
+        self.enable_sensors.setGeometry(10, 90, 150, 20)
 
         button = gui.QPushButton('Execute', common_frame)
         button.clicked.connect(self.execute)
@@ -68,10 +68,10 @@ class MainWindow():
     def get_motion_model_tab(self):
         motion_model_parameters_frame = gui.QFrame()
 
-        self.sliders = [None] * 4
-        for i in xrange(len(self.sliders)):
-            self.sliders[i] = NamedSlider(motion_model_parameters_frame, 100)
-            self.sliders[i].init_gui('a' + str(i + 1), 10, i*30, 30, 150, 40)
+        self.odometry_errors = [None] * 4
+        for i in xrange(len(self.odometry_errors)):
+            self.odometry_errors[i] = NamedSlider(motion_model_parameters_frame, 100)
+            self.odometry_errors[i].init_gui('a' + str(i + 1), 10, i*30, 30, 150, 40)
 
         self.number_of_samples = NamedTextArea(motion_model_parameters_frame)
         self.number_of_samples.init_gui('No. of Samples', 350, 0, 110, 50)
@@ -86,6 +86,15 @@ class MainWindow():
 
         self.laser_angle = NamedTextArea(sensor_model_parameters_frame)
         self.laser_angle.init_gui('Angle', 10, 40, 110, 40)
+
+        self.sensing_distance_error = NamedSlider(sensor_model_parameters_frame, 100)
+        self.sensing_distance_error.init_gui('Dist. error', 200, 10, 80, 150, 40)
+
+        self.sensing_theta_error = NamedSlider(sensor_model_parameters_frame, 100)
+        self.sensing_theta_error.init_gui('Theta error', 200, 40, 80, 150, 40)
+
+        self.sensing_signature_error = NamedSlider(sensor_model_parameters_frame, 100)
+        self.sensing_signature_error.init_gui('Sign. error', 200, 70, 80, 150, 40)
 
         return sensor_model_parameters_frame
 
@@ -107,39 +116,37 @@ class MainWindow():
 
         return landmark_frame
 
-    def eval_type_button_selected(self):
-        selected_button = self.eval_type_group.checkedButton()
-        self.reset_canvas()
-        if selected_button == self.sampled_execution:
-            self.prepare_sampled_widgets()
-        else:
-            self.prepare_direct_widgets()
-
-    def prepare_sampled_widgets(self):
-        self.number_of_samples.setVisible(True)
-
-    def prepare_direct_widgets(self):
-        self.number_of_samples.setVisible(False)
-
     def reset_canvas(self):
         ax = self.figure.gca()
         ax.cla()
         ax.set_ylim([0, 5])
-        ax.set_xlim([0, 5])
+        ax.set_xlim([0, 9])
+
         self.plot_landmarks()
         self.canvas.draw()
 
     def execute(self):
         a_values = list()
-        for slider in self.sliders:
-            a_values.append(slider.get_value())
+        for odometry_error in self.odometry_errors:
+            a_values.append(odometry_error.get_value())
 
         ax = self.figure.gca()
         ax.cla()
 
         execution_parameters = dict()
+
         execution_parameters['algorithm'] = 'odometry'
-        execution_parameters['shape'] = 'rect'
+
+        if self.shape_group.checkedButton() == self.shape_rectangular:
+            execution_parameters['shape'] = 'rect'
+        elif self.shape_group.checkedButton() == self.shape_circular:
+            execution_parameters['shape'] = 'circ'
+
+        execution_parameters['use_sensors'] = self.enable_sensors.isChecked()
+        if self.enable_sensors.isChecked():
+            execution_parameters['sensor_r'] = float(self.sensing_distance.get_text())
+            execution_parameters['sensor_theta'] = float(self.laser_angle.get_text())
+
         execution_parameters['landmarks'] = self.landmarks
         execution_parameters['no_of_samples'] = int(self.number_of_samples.get_text())
         execution_parameters['a'] = a_values
