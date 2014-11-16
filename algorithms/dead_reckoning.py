@@ -8,9 +8,6 @@ class DeadReckoning:
     def __init__(self, a_values):
         self.a_values = a_values
 
-    def eval_direct(self):
-        pass
-
     def eval_sample(self, x0, y0, number_of_samples, v, w, theta, delta_t):
         list_of_points = list()
 

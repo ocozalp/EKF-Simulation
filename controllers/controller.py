@@ -1,5 +1,10 @@
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Wedge
 from algorithms.odometry import Odometry
+from sensors.laser_sensor import LaserSensor
+from utils.geom_utils import convert_degree_to_radian, convert_radian_to_degree
 import math
+import matplotlib
 
 
 def execute_simulation(ax, parameters):
@@ -11,19 +16,26 @@ def execute_simulation(ax, parameters):
         prepare_rectangle(ax)
 
     a_values = parameters['a']
+    landmarks = parameters['landmarks']
 
     if parameters['algorithm'] == 'odometry':
-        algorithm = Odometry(a_values, points)
+        algorithm = Odometry(a_values, points, landmarks)
 
-    landmarks = parameters['landmarks']
+    sensor = None
+    if parameters['use_sensors']:
+        sensor = LaserSensor(parameters['sensor_r'], parameters['sensor_theta'], landmarks)
 
     draw_initial_points(ax, points)
     plot_landmarks(ax, landmarks)
 
     number_of_samples = parameters['no_of_samples']
-    result_points, example_path = algorithm.sample(number_of_samples)
+    result_points, example_path, sense_lines = algorithm.sample(number_of_samples, sensor=sensor)
     draw_result_points(ax, result_points)
     draw_path(ax, example_path)
+
+    if parameters['use_sensors']:
+        draw_sensor_arcs(ax, example_path, parameters['sensor_r'], parameters['sensor_theta'])
+        draw_sense_lines(ax, sense_lines)
 
 
 def prepare_rectangle(ax):
@@ -37,6 +49,21 @@ def draw_path(ax, example_path):
         next_point = example_path[i+1]
         ax.arrow(current_point[0], current_point[1], next_point[0] - current_point[0], next_point[1] - current_point[1],
                  head_width=0.05, head_length=0.1)
+
+
+def draw_sensor_arcs(ax, example_path, r, theta):
+    patches = list()
+    for elm in example_path:
+        angle = convert_radian_to_degree(elm[2]) - theta / 2.0
+        patches.append(Wedge((elm[0], elm[1]), r, angle, angle + theta))
+
+    pc = PatchCollection(patches, cmap=matplotlib.cm.jet, alpha=0.4)
+    ax.add_collection(pc)
+
+
+def draw_sense_lines(ax, sense_lines):
+    for sense_line in sense_lines:
+        ax.plot([sense_line[0], sense_line[2]], [sense_line[1], sense_line[3]], 'r')
 
 
 def draw_result_points(ax, result_points):

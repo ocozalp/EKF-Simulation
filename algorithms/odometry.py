@@ -4,11 +4,12 @@ from utils.probability_utils import sample_normal, get_random_element, sample_un
 
 class Odometry:
 
-    def __init__(self, a, points):
+    def __init__(self, a, points, landmarks):
         self.a = a
         self.points = points
+        self.landmarks = landmarks
 
-    def sample(self, number_of_samples):
+    def sample(self, number_of_samples, sensor=None):
         all_points = list()
         x0 = self.points[0][0]
         y0 = self.points[0][1]
@@ -22,6 +23,8 @@ class Odometry:
 
         example_path = list()
         example_path.append((x0, y0, 0, 0))
+
+        sense_lines = list()
 
         for sample_index in xrange(1, len(self.points)):
             point = self.points[sample_index]
@@ -37,11 +40,17 @@ class Odometry:
                 temp_points.extend(self.eval_sample(number_of_samples, random_element[0], random_element[1], point[0],
                                                     point[1], random_element[2], theta, sample_index))
 
-            example_path.append(get_random_element(temp_points))
+            random_point = get_random_element(temp_points)
+            example_path.append(random_point)
+            if sensor is not None:
+                sensed_landmarks = sensor.sense_landmarks(random_point[0], random_point[1], random_point[2])
+                for sensed_landmark in sensed_landmarks:
+                    sense_lines.append((random_point[0], random_point[1], sensed_landmark[0], sensed_landmark[1]))
+
             prev_points = temp_points
             all_points.extend(prev_points)
 
-        return all_points, example_path
+        return all_points, example_path, sense_lines
 
     def eval_sample(self, number_of_samples, x0, y0, x1, y1, theta0, theta1, sample_index):
         list_of_results = list()
