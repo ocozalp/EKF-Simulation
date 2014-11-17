@@ -27,18 +27,22 @@ class Odometry:
 
         sense_lines = list()
 
+        points_to_select = number_of_samples / mul_factor
+        if number_of_samples % mul_factor != 0:
+            points_to_select += 1
+
         for sample_index in xrange(1, len(self.points)):
             point = self.points[sample_index]
             temp_points = list()
 
-            for random_sample in xrange(mul_factor):
+            for random_sample in xrange(points_to_select):
                 random_element = get_random_element(prev_points)
 
                 d_y = float(point[1] - random_element[1])
                 d_x = float(point[0] - random_element[0])
                 theta = math.atan2(d_y, d_x)
 
-                temp_points.extend(self.eval_sample(number_of_samples, random_element[0], random_element[1], point[0],
+                temp_points.extend(self.eval_sample(mul_factor, random_element[0], random_element[1], point[0],
                                                     point[1], random_element[2], theta, sample_index))
 
             mu, sigma = calculate_moments(temp_points)
