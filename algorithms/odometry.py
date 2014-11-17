@@ -1,5 +1,6 @@
 import math
-from utils.probability_utils import sample_normal, get_random_element, sample_uniform
+from utils.probability_utils import sample_normal, get_random_element, calculate_moments, sample_multivariate_normal
+import numpy as np
 
 
 class Odometry:
@@ -40,12 +41,20 @@ class Odometry:
                 temp_points.extend(self.eval_sample(number_of_samples, random_element[0], random_element[1], point[0],
                                                     point[1], random_element[2], theta, sample_index))
 
-            random_point = get_random_element(temp_points)
+            mu, sigma = calculate_moments(temp_points)
+            random_point = sample_multivariate_normal(mu, sigma, 1)[0]
+
             example_path.append(random_point)
             if sensor is not None:
                 sensed_landmarks = sensor.sense_landmarks(random_point[0], random_point[1], random_point[2])
-                for sensed_landmark in sensed_landmarks:
-                    sense_lines.append((random_point[0], random_point[1], sensed_landmark[0], sensed_landmark[1]))
+
+                if len(sensed_landmarks) > 0:
+                    for sensed_landmark in sensed_landmarks:
+                        sense_lines.append((random_point[0], random_point[1], sensed_landmark[0], sensed_landmark[1]))
+
+                    temp_points = sensor.ekf(random_point, sensed_landmarks,
+                                             np.array([point[0], point[1], random_point[2]]), sigma,
+                                             mul_factor*number_of_samples, sample_index)
 
             prev_points = temp_points
             all_points.extend(prev_points)

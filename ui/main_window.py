@@ -93,9 +93,6 @@ class MainWindow():
         self.sensing_theta_error = NamedSlider(sensor_model_parameters_frame, 100)
         self.sensing_theta_error.init_gui('Theta error', 200, 40, 80, 150, 40)
 
-        self.sensing_signature_error = NamedSlider(sensor_model_parameters_frame, 100)
-        self.sensing_signature_error.init_gui('Sign. error', 200, 70, 80, 150, 40)
-
         return sensor_model_parameters_frame
 
     def get_landmark_tab(self):
@@ -146,6 +143,8 @@ class MainWindow():
         if self.enable_sensors.isChecked():
             execution_parameters['sensor_r'] = float(self.sensing_distance.get_text())
             execution_parameters['sensor_theta'] = float(self.laser_angle.get_text())
+            execution_parameters['sensor_d_error'] = float(self.sensing_distance_error.get_value())
+            execution_parameters['sensor_theta_error'] = float(self.sensing_theta_error.get_value())
 
         execution_parameters['landmarks'] = self.landmarks
         execution_parameters['no_of_samples'] = int(self.number_of_samples.get_text())

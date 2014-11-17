@@ -2,7 +2,7 @@ from matplotlib.collections import PatchCollection
 from matplotlib.patches import Wedge
 from algorithms.odometry import Odometry
 from sensors.laser_sensor import LaserSensor
-from utils.geom_utils import convert_degree_to_radian, convert_radian_to_degree
+from utils.geom_utils import convert_radian_to_degree
 import math
 import matplotlib
 
@@ -23,7 +23,8 @@ def execute_simulation(ax, parameters):
 
     sensor = None
     if parameters['use_sensors']:
-        sensor = LaserSensor(parameters['sensor_r'], parameters['sensor_theta'], landmarks)
+        sensor = LaserSensor(parameters['sensor_r'], parameters['sensor_theta'],
+                             parameters['sensor_d_error'], parameters['sensor_theta_error'], landmarks)
 
     draw_initial_points(ax, points)
     plot_landmarks(ax, landmarks)
