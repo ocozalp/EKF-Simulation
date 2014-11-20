@@ -14,10 +14,13 @@ class MainWindow():
 
     def init_gui(self):
         self.init_canvas()
-        self.init_common_frame()
         self.init_execution_parameters_frame()
 
-        self.main_window.setGeometry(100, 100, 1024, 768)
+        button = gui.QPushButton('Execute', self.main_window)
+        button.clicked.connect(self.execute)
+        button.setGeometry(800, 670, 100, 30)
+
+        self.main_window.setGeometry(100, 100, 1024, 700)
         self.main_window.setFixedSize(1024, 768)
         self.main_window.setWindowTitle('Probabilistic Robotics')
 
@@ -28,10 +31,8 @@ class MainWindow():
         self.canvas.setGeometry(10, 10, 1000, 475)
         self.canvas.mpl_connect('button_press_event', self)
 
-    def init_common_frame(self):
-        common_frame = gui.QFrame(self.main_window)
-        common_frame.setFrameStyle(gui.QFrame.Box)
-        common_frame.setGeometry(10, 500, 240, 220)
+    def get_common_tab(self):
+        common_frame = gui.QFrame()
 
         shape_frame = gui.QFrame(common_frame)
         shape_frame.setFrameStyle(gui.QFrame.Box)
@@ -47,20 +48,33 @@ class MainWindow():
         self.shape_circular.setGeometry(5, 35, 150, 30)
         self.shape_group.addButton(self.shape_circular)
 
-        self.enable_sensors = gui.QCheckBox('Enable sensors', common_frame)
-        self.enable_sensors.setGeometry(10, 90, 150, 20)
+        eval_type_frame = gui.QFrame(common_frame)
+        eval_type_frame.setFrameStyle(gui.QFrame.Box)
+        eval_type_frame.setGeometry(10, 90, 220, 70)
 
-        button = gui.QPushButton('Execute', common_frame)
-        button.clicked.connect(self.execute)
-        button.setGeometry(130, 165, 100, 30)
+        self.eval_type_group = gui.QButtonGroup(eval_type_frame)
+
+        self.eval_type_sample = gui.QRadioButton('Sample', eval_type_frame)
+        self.eval_type_sample.setGeometry(5, 5, 150, 30)
+        self.eval_type_group.addButton(self.eval_type_sample)
+
+        self.eval_type_direct = gui.QRadioButton('Direct', eval_type_frame)
+        self.eval_type_direct.setGeometry(5, 35, 150, 30)
+        self.eval_type_group.addButton(self.eval_type_direct)
+
+        self.enable_sensors = gui.QCheckBox('Enable sensors', common_frame)
+        self.enable_sensors.setGeometry(250, 10, 150, 20)
+
+        return common_frame
 
     def init_execution_parameters_frame(self):
         execution_parameters_frame = gui.QFrame(self.main_window)
-        execution_parameters_frame.setGeometry(260, 500, 750, 220)
+        execution_parameters_frame.setGeometry(10, 500, 750, 200)
 
         tab_widget = gui.QTabWidget(execution_parameters_frame)
-        tab_widget.setGeometry(0, 0, 750, 220)
+        tab_widget.setGeometry(0, 0, 750, 200)
 
+        tab_widget.addTab(self.get_common_tab(), 'Common Prms.')
         tab_widget.addTab(self.get_motion_model_tab(), 'Motion Model')
         tab_widget.addTab(self.get_sensor_model_tab(), 'Sensor Model')
         tab_widget.addTab(self.get_landmark_tab(), 'Landmarks')
@@ -93,6 +107,9 @@ class MainWindow():
         self.sensing_theta_error = NamedSlider(sensor_model_parameters_frame, 100)
         self.sensing_theta_error.init_gui('Theta error', 200, 40, 80, 150, 40)
 
+        self.sensing_signature_error = NamedSlider(sensor_model_parameters_frame, 100)
+        self.sensing_signature_error.init_gui('Sign. error', 100, 70, 80, 150, 40)
+
         return sensor_model_parameters_frame
 
     def get_landmark_tab(self):
@@ -101,7 +118,7 @@ class MainWindow():
         landmark_frame = gui.QFrame()
 
         self.landmark_list = gui.QListWidget(landmark_frame)
-        self.landmark_list.setGeometry(10, 10, 150, 165)
+        self.landmark_list.setGeometry(10, 10, 150, 145)
 
         remove_landmark_button = gui.QPushButton('-', landmark_frame)
         remove_landmark_button.setGeometry(170, 50, 30, 30)
@@ -145,10 +162,12 @@ class MainWindow():
             execution_parameters['sensor_theta'] = float(self.laser_angle.get_text())
             execution_parameters['sensor_d_error'] = float(self.sensing_distance_error.get_value())
             execution_parameters['sensor_theta_error'] = float(self.sensing_theta_error.get_value())
+            execution_parameters['sensor_s_error'] = float(self.sensing_signature_error.get_value())
 
         execution_parameters['landmarks'] = self.landmarks
         execution_parameters['no_of_samples'] = int(self.number_of_samples.get_text())
         execution_parameters['a'] = a_values
+        execution_parameters['sample'] = (self.eval_type_group.checkedButton() == self.eval_type_sample)
 
         execute_simulation(ax, execution_parameters)
 

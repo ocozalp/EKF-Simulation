@@ -35,8 +35,8 @@ class NamedSlider(gui.QWidget):
 
         self.slider = gui.QSlider(self)
         self.slider.setOrientation(core.Qt.Horizontal)
-        self.slider.setMinimum(-20)
-        self.slider.setMaximum(20)
+        self.slider.setMinimum(-50)
+        self.slider.setMaximum(50)
         self.slider.setTickInterval(1)
         self.slider.setGeometry(label_length, 5, slider_length, 30)
 

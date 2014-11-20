@@ -20,7 +20,7 @@ def eval_normal(x, mu, sigma):
     return (1.0 / (math.sqrt(2*math.pi*sigma))) * math.e ** -(((x-mu)**2) / sigma)
 
 
-def sample_multivariate_normal(mu, sigma, cnt):
+def sample_multivariate_normal(mu, sigma, cnt=1):
     return np.random.multivariate_normal(mu, sigma, cnt)
 
 

@@ -3,6 +3,7 @@ from matplotlib.patches import Wedge
 from algorithms.odometry import Odometry
 from sensors.laser_sensor import LaserSensor
 from utils.geom_utils import convert_radian_to_degree
+from utils.graphical_utils import draw_ellipse
 import math
 import matplotlib
 
@@ -24,14 +25,15 @@ def execute_simulation(ax, parameters):
     sensor = None
     if parameters['use_sensors']:
         sensor = LaserSensor(parameters['sensor_r'], parameters['sensor_theta'],
-                             parameters['sensor_d_error'], parameters['sensor_theta_error'], landmarks)
+                             parameters['sensor_d_error'], parameters['sensor_theta_error'],
+                             parameters['sensor_s_error'], landmarks)
 
     draw_initial_points(ax, points)
     plot_landmarks(ax, landmarks)
 
     number_of_samples = parameters['no_of_samples']
-    result_points, example_path, sense_lines = algorithm.sample(number_of_samples, sensor=sensor)
-    draw_result_points(ax, result_points)
+    distributions, example_path, sense_lines = algorithm.sample(number_of_samples, sensor=sensor)
+    draw_result_points(ax, distributions, parameters['sample'])
     draw_path(ax, example_path)
 
     if parameters['use_sensors']:
@@ -67,9 +69,16 @@ def draw_sense_lines(ax, sense_lines):
         ax.plot([sense_line[0], sense_line[2]], [sense_line[1], sense_line[3]], 'r')
 
 
-def draw_result_points(ax, result_points):
-    for result_point in result_points:
-        ax.plot([result_point[0]], [result_point[1]], 'rcmy'[result_point[3] % 4] + '.')
+def draw_result_points(ax, distributions, sample):
+    if sample:
+        for distribution in distributions:
+            ax.plot([p[0] for p in distribution.points], [p[1] for p in distribution.points],
+                    'rcmy'[distribution.distribution_id % 4] + '.')
+    else:
+        for i in xrange(1, len(distributions)):
+            draw_ellipse(distributions[i].mu[0], distributions[i].mu[1],
+                          [[distributions[i].sigma[0][0], distributions[i].sigma[0][1]],
+                          [distributions[i].sigma[1][0], distributions[i].sigma[1][1]]])
 
 
 def draw_initial_points(ax, point_list):
@@ -104,7 +113,7 @@ def get_circle_points():
     x_0 = 4
     y_0 = 2
     r = 1.5
-    for i in xrange(12):
+    for i in xrange(13):
         theta = (i * math.pi) / 6.0
         point_list.append((x_0 + r * math.cos(theta), y_0 + r * math.sin(theta)))
 
