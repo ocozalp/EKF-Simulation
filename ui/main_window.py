@@ -108,7 +108,7 @@ class MainWindow():
         self.sensing_theta_error.init_gui('Theta error', 200, 40, 80, 150, 40)
 
         self.sensing_signature_error = NamedSlider(sensor_model_parameters_frame, 100)
-        self.sensing_signature_error.init_gui('Sign. error', 100, 70, 80, 150, 40)
+        self.sensing_signature_error.init_gui('Sign. error', 200, 70, 80, 150, 40)
 
         return sensor_model_parameters_frame
 

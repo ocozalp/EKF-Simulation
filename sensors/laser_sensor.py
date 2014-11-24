@@ -43,7 +43,7 @@ class LaserSensor:
 
     def ekf(self, current_point, sensed_landmarks, mu, sigma, number_of_samples, sample_index):
         #added 0.0001, otherwise Q_t can not be inverted.
-        Q_t = np.matrix([[self.distance_error, 0, 0], [0, self.theta_error, 0], [0, 0, 0.0001 + self.signature_error]])
+        Q_t = np.matrix([[0.0001 + self.distance_error, 0, 0], [0, 0.0001 + self.theta_error, 0], [0, 0, 0.0001 + self.signature_error]])
 
         real_z_vectors = list()
         z_vectors = list()
