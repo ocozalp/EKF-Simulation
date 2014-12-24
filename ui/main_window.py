@@ -71,13 +71,14 @@ class MainWindow():
         execution_parameters_frame = gui.QFrame(self.main_window)
         execution_parameters_frame.setGeometry(10, 500, 750, 200)
 
-        tab_widget = gui.QTabWidget(execution_parameters_frame)
-        tab_widget.setGeometry(0, 0, 750, 200)
+        self.tab_widget = gui.QTabWidget(execution_parameters_frame)
+        self.tab_widget.setGeometry(0, 0, 750, 200)
 
-        tab_widget.addTab(self.get_common_tab(), 'Common Prms.')
-        tab_widget.addTab(self.get_motion_model_tab(), 'Motion Model')
-        tab_widget.addTab(self.get_sensor_model_tab(), 'Sensor Model')
-        tab_widget.addTab(self.get_landmark_tab(), 'Landmarks')
+        self.tab_widget.addTab(self.get_common_tab(), 'Common Prms.')
+        self.tab_widget.addTab(self.get_motion_model_tab(), 'Motion Model')
+        self.tab_widget.addTab(self.get_sensor_model_tab(), 'Sensor Model')
+        self.tab_widget.addTab(self.get_landmark_tab(), 'Landmarks')
+        self.tab_widget.addTab(self.get_multirobot_tab(), 'Robots')
 
     def get_motion_model_tab(self):
         motion_model_parameters_frame = gui.QFrame()
@@ -130,6 +131,43 @@ class MainWindow():
 
         return landmark_frame
 
+    def get_multirobot_tab(self):
+        multirobot_frame = gui.QFrame()
+
+        robot_frame = gui.QFrame(multirobot_frame)
+        robot_frame.setFrameStyle(gui.QFrame.Box)
+        robot_frame.setGeometry(10, 10, 110, 150)
+
+        self.robot_group = gui.QButtonGroup(multirobot_frame)
+
+        self.robots = list()
+        self.robot_points = list()
+
+        for i in xrange(3):
+            def make_lambda(index):
+                return lambda: self.update_robot_list(index)
+
+            robot = gui.QRadioButton('Robot - ' + str(i+1), robot_frame)
+            robot.setGeometry(5, 5 + i * 30, 100, 30)
+            robot.clicked.connect(make_lambda(i))
+
+            self.robots.append(robot)
+            self.robot_group.addButton(robot)
+            self.robot_points.append(list())
+
+        self.robot_list = gui.QListWidget(multirobot_frame)
+        self.robot_list.setGeometry(150, 10, 150, 145)
+
+        remove_robot_point = gui.QPushButton('-', multirobot_frame)
+        remove_robot_point.setGeometry(310, 50, 30, 30)
+        remove_robot_point.clicked.connect(self.remove_selected_robot_point)
+
+        clear_landmarks_button = gui.QPushButton('Clear All', multirobot_frame)
+        clear_landmarks_button.setGeometry(350, 10, 150, 30)
+        clear_landmarks_button.clicked.connect(self.remove_all_robot_points)
+
+        return multirobot_frame
+
     def reset_canvas(self):
         ax = self.figure.gca()
         ax.cla()
@@ -137,6 +175,7 @@ class MainWindow():
         ax.set_xlim([0, 9])
 
         self.plot_landmarks()
+        self.plot_robot_points()
         self.canvas.draw()
 
     def execute(self):
@@ -177,7 +216,15 @@ class MainWindow():
         self.main_window.show()
 
     def __call__(self, event):
-        self.add_landmark(event.xdata, event.ydata)
+        current_tab = self.tab_widget.currentIndex()
+        if current_tab == 3: #add landmarks
+            self.add_landmark(event.xdata, event.ydata)
+        elif current_tab == 4: #add robot point
+            self.add_robot_point(event.xdata, event.ydata)
+
+    def update_robot_list(self, index):
+        num_of_points = len(self.robot_points[index])
+        self.refresh_robot_list(num_of_points)
 
     def remove_selected_landmark(self):
         selected_items = list(self.landmark_list.selectedItems())
@@ -187,9 +234,38 @@ class MainWindow():
             self.landmarks = [landmark for landmark in self.landmarks if landmark[2] != current_item_id]
         self.reset_canvas()
 
+    def get_selected_robot_index(self):
+        if self.robot_group.checkedButton() is None:
+            return -1
+
+        return [i for i in xrange(len(self.robot_points)) if self.robots[i] == self.robot_group.checkedButton()][0]
+
+    def remove_selected_robot_point(self):
+        current_robot_index = self.get_selected_robot_index()
+        if current_robot_index == -1:
+            return
+
+        selected_items = [str(selected_item.text()) for selected_item in self.robot_list.selectedItems()]
+        new_point_list = list()
+
+        for i in xrange(len(self.robot_points[current_robot_index])):
+            if str(i+1) not in selected_items:
+                new_point_list.append(self.robot_points[current_robot_index][i])
+
+        self.robot_points[current_robot_index] = new_point_list
+        self.refresh_robot_list(len(new_point_list))
+        self.reset_canvas()
+
     def remove_all_landmarks(self):
         self.landmark_list.clear()
         self.landmarks = list()
+        self.reset_canvas()
+
+    def remove_all_robot_points(self):
+        self.robot_list.clear()
+        self.robot_points = list()
+        for robot_points in xrange(3):
+            self.robot_points.append(list())
         self.reset_canvas()
 
     def add_landmark(self, x, y):
@@ -198,9 +274,29 @@ class MainWindow():
         self.landmark_list.addItem(str(landmark_id))
         self.reset_canvas()
 
+    def add_robot_point(self, x, y):
+        current_robot_index = self.get_selected_robot_index()
+        if current_robot_index == -1:
+            return
+
+        self.robot_points[current_robot_index].append((x, y))
+        self.refresh_robot_list(len(self.robot_points[current_robot_index]))
+        self.reset_canvas()
+
+    def refresh_robot_list(self, num_of_points):
+        self.robot_list.clear()
+        for i in xrange(1, num_of_points + 1):
+            self.robot_list.addItem(str(i))
+
     def plot_landmarks(self):
         ax = self.figure.gca()
         for landmark in self.landmarks:
             ax.plot([landmark[0]], [landmark[1]], 'go')
             ax.annotate(str(landmark[2]), xy=(landmark[0], landmark[1]), textcoords='offset points')
         self.canvas.draw()
+
+    def plot_robot_points(self):
+        ax = self.figure.gca()
+        colors = ['bs', 'ys', 'rs']
+        for i in xrange(len(self.robots)):
+            ax.plot([p[0] for p in self.robot_points[i]], [p[1] for p in self.robot_points[i]], colors[i])
