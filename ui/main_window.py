@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from controllers.controller import execute_simulation
 from ui.widgets import NamedSlider, NamedTextArea
+from ui.common import show_error_box
 
 
 class MainWindow():
@@ -15,6 +16,23 @@ class MainWindow():
     def init_gui(self):
         self.init_canvas()
         self.init_execution_parameters_frame()
+
+        eval_type_frame = gui.QFrame(self.main_window)
+        eval_type_frame.setFrameStyle(gui.QFrame.Box)
+        eval_type_frame.setGeometry(800, 530, 200, 70)
+
+        self.eval_type_group = gui.QButtonGroup(eval_type_frame)
+
+        self.eval_type_sample = gui.QRadioButton('Sample', eval_type_frame)
+        self.eval_type_sample.setGeometry(5, 5, 150, 30)
+        self.eval_type_group.addButton(self.eval_type_sample)
+
+        self.eval_type_direct = gui.QRadioButton('Direct', eval_type_frame)
+        self.eval_type_direct.setGeometry(5, 35, 150, 30)
+        self.eval_type_group.addButton(self.eval_type_direct)
+
+        self.number_of_samples = NamedTextArea(self.main_window)
+        self.number_of_samples.init_gui('No. of Samples', 800, 600, 110, 50)
 
         button = gui.QPushButton('Execute', self.main_window)
         button.clicked.connect(self.execute)
@@ -31,42 +49,6 @@ class MainWindow():
         self.canvas.setGeometry(10, 10, 1000, 475)
         self.canvas.mpl_connect('button_press_event', self)
 
-    def get_common_tab(self):
-        common_frame = gui.QFrame()
-
-        shape_frame = gui.QFrame(common_frame)
-        shape_frame.setFrameStyle(gui.QFrame.Box)
-        shape_frame.setGeometry(10, 10, 220, 70)
-
-        self.shape_group = gui.QButtonGroup(shape_frame)
-
-        self.shape_rectangular = gui.QRadioButton('Rectangular', shape_frame)
-        self.shape_rectangular.setGeometry(5, 5, 150, 30)
-        self.shape_group.addButton(self.shape_rectangular)
-
-        self.shape_circular = gui.QRadioButton('Circular', shape_frame)
-        self.shape_circular.setGeometry(5, 35, 150, 30)
-        self.shape_group.addButton(self.shape_circular)
-
-        eval_type_frame = gui.QFrame(common_frame)
-        eval_type_frame.setFrameStyle(gui.QFrame.Box)
-        eval_type_frame.setGeometry(10, 90, 220, 70)
-
-        self.eval_type_group = gui.QButtonGroup(eval_type_frame)
-
-        self.eval_type_sample = gui.QRadioButton('Sample', eval_type_frame)
-        self.eval_type_sample.setGeometry(5, 5, 150, 30)
-        self.eval_type_group.addButton(self.eval_type_sample)
-
-        self.eval_type_direct = gui.QRadioButton('Direct', eval_type_frame)
-        self.eval_type_direct.setGeometry(5, 35, 150, 30)
-        self.eval_type_group.addButton(self.eval_type_direct)
-
-        self.enable_sensors = gui.QCheckBox('Enable sensors', common_frame)
-        self.enable_sensors.setGeometry(250, 10, 150, 20)
-
-        return common_frame
-
     def init_execution_parameters_frame(self):
         execution_parameters_frame = gui.QFrame(self.main_window)
         execution_parameters_frame.setGeometry(10, 500, 750, 200)
@@ -74,7 +56,6 @@ class MainWindow():
         self.tab_widget = gui.QTabWidget(execution_parameters_frame)
         self.tab_widget.setGeometry(0, 0, 750, 200)
 
-        self.tab_widget.addTab(self.get_common_tab(), 'Common Prms.')
         self.tab_widget.addTab(self.get_motion_model_tab(), 'Motion Model')
         self.tab_widget.addTab(self.get_sensor_model_tab(), 'Sensor Model')
         self.tab_widget.addTab(self.get_landmark_tab(), 'Landmarks')
@@ -87,9 +68,6 @@ class MainWindow():
         for i in xrange(len(self.odometry_errors)):
             self.odometry_errors[i] = NamedSlider(motion_model_parameters_frame, 100)
             self.odometry_errors[i].init_gui('a' + str(i + 1), 10, i*30, 30, 150, 40)
-
-        self.number_of_samples = NamedTextArea(motion_model_parameters_frame)
-        self.number_of_samples.init_gui('No. of Samples', 350, 0, 110, 50)
 
         return motion_model_parameters_frame
 
@@ -110,6 +88,9 @@ class MainWindow():
 
         self.sensing_signature_error = NamedSlider(sensor_model_parameters_frame, 100)
         self.sensing_signature_error.init_gui('Sign. error', 200, 70, 80, 150, 40)
+
+        self.enable_sensors = gui.QCheckBox('Enable sensors', sensor_model_parameters_frame)
+        self.enable_sensors.setGeometry(500, 10, 150, 20)
 
         return sensor_model_parameters_frame
 
@@ -188,23 +169,37 @@ class MainWindow():
 
         execution_parameters = dict()
 
-        execution_parameters['algorithm'] = 'odometry'
+        execution_parameters['points'] = self.get_robot_points()
 
-        if self.shape_group.checkedButton() == self.shape_rectangular:
-            execution_parameters['shape'] = 'rect'
-        elif self.shape_group.checkedButton() == self.shape_circular:
-            execution_parameters['shape'] = 'circ'
+        if len(execution_parameters['points']) == 0:
+            show_error_box(self.main_window, 'En az 1 robot icin yol bilgisi girilmelidir')
+            return
 
         execution_parameters['use_sensors'] = self.enable_sensors.isChecked()
         if self.enable_sensors.isChecked():
-            execution_parameters['sensor_r'] = float(self.sensing_distance.get_text())
-            execution_parameters['sensor_theta'] = float(self.laser_angle.get_text())
+            try:
+                execution_parameters['sensor_r'] = float(self.sensing_distance.get_text())
+            except Exception:
+                show_error_box(self.main_window, 'Hatali sensor uzakligi')
+                return
+
+            try:
+                execution_parameters['sensor_theta'] = float(self.laser_angle.get_text())
+            except Exception:
+                show_error_box(self.main_window, 'Hatali sensor acisi')
+                return
+
             execution_parameters['sensor_d_error'] = float(self.sensing_distance_error.get_value())
             execution_parameters['sensor_theta_error'] = float(self.sensing_theta_error.get_value())
             execution_parameters['sensor_s_error'] = float(self.sensing_signature_error.get_value())
 
         execution_parameters['landmarks'] = self.landmarks
-        execution_parameters['no_of_samples'] = int(self.number_of_samples.get_text())
+        try:
+            execution_parameters['no_of_samples'] = int(self.number_of_samples.get_text())
+        except Exception:
+            show_error_box(self.main_window, 'Hatali ornek sayisi')
+            return
+
         execution_parameters['a'] = a_values
         execution_parameters['sample'] = (self.eval_type_group.checkedButton() == self.eval_type_sample)
 
@@ -212,14 +207,22 @@ class MainWindow():
 
         self.canvas.draw()
 
+    def get_robot_points(self):
+        result = list()
+        for i in xrange(len(self.robot_points)):
+            if len(self.robot_points[i]) > 0:
+                result.append((i, self.robot_points[i]))
+
+        return result
+
     def show(self):
         self.main_window.show()
 
     def __call__(self, event):
         current_tab = self.tab_widget.currentIndex()
-        if current_tab == 3: #add landmarks
+        if current_tab == 2: #add landmarks
             self.add_landmark(event.xdata, event.ydata)
-        elif current_tab == 4: #add robot point
+        elif current_tab == 3: #add robot point
             self.add_robot_point(event.xdata, event.ydata)
 
     def update_robot_list(self, index):
@@ -297,6 +300,8 @@ class MainWindow():
 
     def plot_robot_points(self):
         ax = self.figure.gca()
+        line_colors = ['b', 'y', 'r']
         colors = ['bs', 'ys', 'rs']
         for i in xrange(len(self.robots)):
+            ax.plot([p[0] for p in self.robot_points[i]], [p[1] for p in self.robot_points[i]], line_colors[i])
             ax.plot([p[0] for p in self.robot_points[i]], [p[1] for p in self.robot_points[i]], colors[i])
