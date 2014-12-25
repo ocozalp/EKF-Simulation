@@ -147,6 +147,9 @@ class MainWindow():
         clear_landmarks_button.setGeometry(350, 10, 150, 30)
         clear_landmarks_button.clicked.connect(self.remove_all_robot_points)
 
+        self.enable_communication = gui.QCheckBox('Enable communication', multirobot_frame)
+        self.enable_communication.setGeometry(520, 10, 200, 20)
+
         return multirobot_frame
 
     def reset_canvas(self):
@@ -175,6 +178,7 @@ class MainWindow():
             show_error_box(self.main_window, 'En az 1 robot icin yol bilgisi girilmelidir')
             return
 
+        execution_parameters['use_communication'] = self.enable_communication.isChecked()
         execution_parameters['use_sensors'] = self.enable_sensors.isChecked()
         if self.enable_sensors.isChecked():
             try:

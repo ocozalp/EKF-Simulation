@@ -6,18 +6,17 @@ from utils.probability_utils import sample_multivariate_normal
 
 
 class LaserSensor:
-    def __init__(self, r, sensor_theta, distance_error, theta_error, signature_error, landmarks):
+    def __init__(self, r, sensor_theta, distance_error, theta_error, signature_error):
         self.r = r
         self.sensor_theta = convert_degree_to_radian(sensor_theta)
         self.distance_error = distance_error
         self.theta_error = theta_error
         self.signature_error = signature_error
-        self.landmarks = landmarks
 
-    def sense_landmarks(self, x, y, theta):
+    def sense_landmarks(self, x, y, theta, landmarks):
         result = list()
 
-        for landmark in self.landmarks:
+        for landmark in landmarks:
             dist = math.sqrt((landmark[1] - y) ** 2 + (landmark[0] - x) ** 2)
             if dist > self.r:
                 continue
@@ -43,7 +42,8 @@ class LaserSensor:
 
     def ekf(self, current_point, sensed_landmarks, mu, sigma, number_of_samples, sample_index):
         #added 0.0001, otherwise Q_t can not be inverted.
-        Q_t = np.matrix([[0.0001 + self.distance_error, 0, 0], [0, 0.0001 + self.theta_error, 0], [0, 0, 0.0001 + self.signature_error]])
+        Q_t = np.matrix([[0.0001 + self.distance_error, 0, 0], [0, 0.0001 + self.theta_error, 0],
+                         [0, 0, 0.0001 + self.signature_error]])
 
         real_z_vectors = list()
         z_vectors = list()
