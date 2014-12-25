@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from controllers.controller import execute_simulation
 from ui.widgets import NamedSlider, NamedTextArea
-from ui.common import show_error_box
+from ui.common import show_error_box, robot_colors
 
 
 class MainWindow():
@@ -208,12 +208,7 @@ class MainWindow():
         self.canvas.draw()
 
     def get_robot_points(self):
-        result = list()
-        for i in xrange(len(self.robot_points)):
-            if len(self.robot_points[i]) > 0:
-                result.append((i, self.robot_points[i]))
-
-        return result
+        return [(i, robot_list) for i, robot_list in enumerate(self.robot_points) if len(robot_list) > 0]
 
     def show(self):
         self.main_window.show()
@@ -300,8 +295,6 @@ class MainWindow():
 
     def plot_robot_points(self):
         ax = self.figure.gca()
-        line_colors = ['b', 'y', 'r']
-        colors = ['bs', 'ys', 'rs']
         for i in xrange(len(self.robots)):
-            ax.plot([p[0] for p in self.robot_points[i]], [p[1] for p in self.robot_points[i]], line_colors[i])
-            ax.plot([p[0] for p in self.robot_points[i]], [p[1] for p in self.robot_points[i]], colors[i])
+            ax.plot([p[0] for p in self.robot_points[i]], [p[1] for p in self.robot_points[i]], robot_colors[i] + 's')
+            ax.plot([p[0] for p in self.robot_points[i]], [p[1] for p in self.robot_points[i]], robot_colors[i])

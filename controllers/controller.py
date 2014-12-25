@@ -4,8 +4,7 @@ from algorithms.odometry import Odometry
 from sensors.laser_sensor import LaserSensor
 from utils.geom_utils import convert_radian_to_degree
 from utils.graphical_utils import draw_ellipse
-import math
-import matplotlib
+from ui.common import robot_colors
 
 
 def execute_simulation(ax, parameters):
@@ -14,8 +13,6 @@ def execute_simulation(ax, parameters):
     points = parameters['points']
     a_values = parameters['a']
     landmarks = parameters['landmarks']
-
-    algorithm = Odometry(a_values, points, landmarks)
 
     sensor = None
     if parameters['use_sensors']:
@@ -27,13 +24,15 @@ def execute_simulation(ax, parameters):
     plot_landmarks(ax, landmarks)
 
     number_of_samples = parameters['no_of_samples']
-    distributions, example_path, sense_lines = algorithm.sample(number_of_samples, sensor=sensor)
-    draw_result_points(ax, distributions, parameters['sample'])
-    draw_path(ax, example_path)
+    for i, robot_points in points:
+        algorithm = Odometry(a_values, robot_points, landmarks)
+        distributions, example_path, sense_lines = algorithm.sample(number_of_samples, sensor=sensor)
+        draw_result_points(ax, distributions, parameters['sample'])
+        draw_path(ax, example_path)
 
-    if parameters['use_sensors']:
-        draw_sensor_arcs(ax, example_path, parameters['sensor_r'], parameters['sensor_theta'])
-        draw_sense_lines(ax, sense_lines)
+        if parameters['use_sensors']:
+            draw_sensor_arcs(ax, example_path, parameters['sensor_r'], parameters['sensor_theta'], i)
+            draw_sense_lines(ax, sense_lines)
 
 
 def prepare_rectangle(ax):
@@ -49,13 +48,13 @@ def draw_path(ax, example_path):
                  head_width=0.05, head_length=0.1)
 
 
-def draw_sensor_arcs(ax, example_path, r, theta):
+def draw_sensor_arcs(ax, example_path, r, theta, robot_index):
     patches = list()
     for elm in example_path:
         angle = convert_radian_to_degree(elm[2]) - theta / 2.0
         patches.append(Wedge((elm[0], elm[1]), r, angle, angle + theta))
-
-    pc = PatchCollection(patches, cmap=matplotlib.cm.jet, alpha=0.4)
+    print robot_index
+    pc = PatchCollection(patches, cmap='jet', alpha=0.4)
     ax.add_collection(pc)
 
 
@@ -72,13 +71,13 @@ def draw_result_points(ax, distributions, sample):
     else:
         for i in xrange(1, len(distributions)):
             draw_ellipse(distributions[i].mu[0], distributions[i].mu[1],
-                          [[distributions[i].sigma[0][0], distributions[i].sigma[0][1]],
-                          [distributions[i].sigma[1][0], distributions[i].sigma[1][1]]])
+                         [[distributions[i].sigma[0][0], distributions[i].sigma[0][1]],
+                         [distributions[i].sigma[1][0], distributions[i].sigma[1][1]]])
 
 
 def draw_initial_points(ax, point_list):
-    for point in point_list:
-        ax.plot([point[0]], [point[1]], 'bo')
+    for robot_index, robot_points in point_list:
+        ax.plot([x[0] for x in robot_points], [x[1] for x in robot_points], robot_colors[robot_index]+'s')
 
 
 def plot_landmarks(ax, landmarks):
