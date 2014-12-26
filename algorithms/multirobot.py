@@ -1,6 +1,13 @@
 import numpy as np
 
 
+class MultirobotCommunication:
+
+    def __init__(self, one_way_enabled, comm_distance):
+        self.one_way_enabled = one_way_enabled
+        self.comm_distance = comm_distance
+
+
 def update_robot_position_estimates(distribution1, distribution2):
     h12 = np.array([[1, 0, distribution1.mu[1] - distribution2.mu[1]],
                     [0, 1, distribution2.mu[0] - distribution1.mu[0]],

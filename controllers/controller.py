@@ -5,6 +5,7 @@ from sensors.laser_sensor import LaserSensor
 from utils.geom_utils import convert_radian_to_degree
 from utils.graphical_utils import draw_ellipse
 from ui.common import robot_colors
+from algorithms.multirobot import MultirobotCommunication
 
 
 def execute_simulation(ax, parameters):
@@ -14,6 +15,7 @@ def execute_simulation(ax, parameters):
     a_values = parameters['a']
     landmarks = parameters['landmarks']
     use_communication = parameters['use_communication']
+    one_way_update = parameters['one_way_update']
 
     sensor = None
     if parameters['use_sensors']:
@@ -21,12 +23,16 @@ def execute_simulation(ax, parameters):
                              parameters['sensor_d_error'], parameters['sensor_theta_error'],
                              parameters['sensor_s_error'])
 
+    multirobot = None
+    if use_communication:
+        multirobot = MultirobotCommunication(one_way_update, parameters['comm_distance'])
+
     draw_initial_points(ax, points)
     plot_landmarks(ax, landmarks)
 
     number_of_samples = parameters['no_of_samples']
     algorithm = Odometry(a_values, points, landmarks)
-    distributions, example_paths, sense_lines = algorithm.sample(number_of_samples, use_communication, sensor=sensor)
+    distributions, example_paths, sense_lines, robot_sense_lines = algorithm.sample(number_of_samples, sensor=sensor, communication=multirobot)
 
     draw_result_points(ax, distributions, parameters['sample'])
     draw_path(ax, example_paths)
@@ -34,6 +40,13 @@ def execute_simulation(ax, parameters):
     if parameters['use_sensors']:
         draw_sensor_arcs(ax, example_paths, parameters['sensor_r'], parameters['sensor_theta'])
         draw_sense_lines(ax, sense_lines)
+
+    draw_robot_sense_lines(ax, robot_sense_lines)
+
+
+def draw_robot_sense_lines(ax, robot_sense_lines):
+    for robot_sense_line in robot_sense_lines:
+        ax.plot([robot_sense_line[0], robot_sense_line[2]], [robot_sense_line[1], robot_sense_line[3]], 'g')
 
 
 def prepare_rectangle(ax):

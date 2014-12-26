@@ -150,6 +150,12 @@ class MainWindow():
         self.enable_communication = gui.QCheckBox('Enable communication', multirobot_frame)
         self.enable_communication.setGeometry(520, 10, 200, 20)
 
+        self.enable_one_way_update = gui.QCheckBox('One way update', multirobot_frame)
+        self.enable_one_way_update.setGeometry(520, 40, 200, 20)
+
+        self.communication_distance = NamedTextArea(multirobot_frame)
+        self.communication_distance.init_gui('Comm. Distance', 520, 120, 150, 40)
+
         return multirobot_frame
 
     def reset_canvas(self):
@@ -179,7 +185,15 @@ class MainWindow():
             return
 
         execution_parameters['use_communication'] = self.enable_communication.isChecked()
+        execution_parameters['one_way_update'] = self.enable_one_way_update.isChecked()
         execution_parameters['use_sensors'] = self.enable_sensors.isChecked()
+        if execution_parameters['use_communication']:
+            try:
+                execution_parameters['comm_distance'] = float(self.communication_distance.get_text())
+            except Exception:
+                show_error_box(self.main_window, 'Hatali iletisim uzakligi')
+                return
+
         if self.enable_sensors.isChecked():
             try:
                 execution_parameters['sensor_r'] = float(self.sensing_distance.get_text())
