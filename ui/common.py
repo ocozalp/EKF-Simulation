@@ -1,10 +1,10 @@
-import PyQt4.QtGui as gui
+import PyQt5.QtWidgets as widgets
 
 
 robot_colors = ['b', 'y', 'r']
 
 def show_message_box(parent_widget, title, message):
-    message_box = gui.QMessageBox()
+    message_box = widgets.QMessageBox()
     message_box.about(parent_widget, title, message)
 
 

@@ -35,11 +35,11 @@ def calculate_moments(points):
     sigma = np.zeros((3, 3))
 
     for point in point_array:
-        for i in xrange(3):
-            for j in xrange(3):
+        for i in range(3):
+            for j in range(3):
                 sigma[i, j] += (point[i] - mu[i])*(point[j] - mu[j])
 
-    for i in xrange(3):
-        for j in xrange(3):
+    for i in range(3):
+        for j in range(3):
             sigma[i, j] /= len(points) - 1
     return mu.T, sigma

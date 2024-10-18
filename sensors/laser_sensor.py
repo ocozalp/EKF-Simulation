@@ -73,11 +73,11 @@ class LaserSensor:
             z_vector = np.array([sqrt_q, math.atan2(d_y, d_x) - mu[2], sensed_landmark[2]]).T
             z_vectors.append(z_vector)
 
-        for i in xrange(len(sensed_landmarks)):
+        for i in range(len(sensed_landmarks)):
             mu = mu + np.matrix(kalman_gains[i] * np.matrix(z_vectors[i].T - real_z_vectors[i].T).T).A1
 
         sub_total = kalman_gains[0] * h_matrices[0]
-        for i in xrange(1, len(sensed_landmarks)):
+        for i in range(1, len(sensed_landmarks)):
             sub_total += kalman_gains[i] * h_matrices[i]
 
         sub_total = np.identity(3) - sub_total

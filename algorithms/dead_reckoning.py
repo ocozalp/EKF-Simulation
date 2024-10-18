@@ -10,7 +10,7 @@ class DeadReckoning:
     def eval_sample(self, x0, y0, number_of_samples, v, w, theta, delta_t):
         list_of_points = list()
 
-        for i in xrange(number_of_samples):
+        for i in range(number_of_samples):
             list_of_points.append(self.sample_point(x0, y0, v, w, theta, delta_t))
 
         return list_of_points
@@ -21,7 +21,7 @@ class DeadReckoning:
         v = w * r
         theta = 0
 
-        for i in xrange(number_of_points):
+        for i in range(number_of_points):
             x0 = xc + r*math.sin(theta)
             y0 = yc - r*math.cos(theta)
             single_result = self.eval_sample(x0, y0, number_of_samples, v, w, theta, 1)

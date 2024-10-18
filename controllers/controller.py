@@ -56,7 +56,7 @@ def prepare_rectangle(ax):
 
 def draw_path(ax, example_paths):
     for j in example_paths:
-        for i in xrange(len(example_paths[j]) - 1):
+        for i in range(len(example_paths[j]) - 1):
             current_point = example_paths[j][i]
             next_point = example_paths[j][i+1]
             ax.arrow(current_point[0], current_point[1], next_point[0] - current_point[0],
@@ -91,7 +91,7 @@ def draw_result_points(ax, distributions, sample):
     else:
         for robot_index in distributions:
             distribution = distributions[robot_index]
-            for i in xrange(1, len(distribution)):
+            for i in range(1, len(distribution)):
                 draw_ellipse(distribution[i].mu[0], distribution[i].mu[1],
                              [[distribution[i].sigma[0][0], distribution[i].sigma[0][1]],
                              [distribution[i].sigma[1][0], distribution[i].sigma[1][1]]])
@@ -105,4 +105,4 @@ def draw_initial_points(ax, point_list):
 def plot_landmarks(ax, landmarks):
     for landmark in landmarks:
         ax.plot([landmark[0]], [landmark[1]], 'go')
-        ax.annotate(str(landmark[2]), xy=(landmark[0], landmark[1]), textcoords='offset points')
+        ax.annotate(str(landmark[2]), xy=(landmark[0], landmark[1]), textcoords='offset points', xytext=(landmark[0], landmark[1]))

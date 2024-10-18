@@ -1,17 +1,18 @@
-from PyQt4 import QtGui as gui
-from PyQt4 import QtCore as core
+from PyQt5 import QtWidgets as widgets
+from PyQt5 import QtCore as core
+import PyQt5.QtWidgets as widgets
 
 
-class NamedTextArea(gui.QWidget):
+class NamedTextArea(widgets.QWidget):
     def __init__(self, parent=None):
-        super(gui.QWidget, self).__init__(parent=parent)
+        super(widgets.QWidget, self).__init__(parent=parent)
         
     def init_gui(self, text, x, y, label_length=150, text_length=250):
-        label = gui.QLabel(self)
+        label = widgets.QLabel(self)
         label.setText(text)
         label.setGeometry(0, 5, label_length, 30)
         
-        self.text_area = gui.QLineEdit(self)
+        self.text_area = widgets.QLineEdit(self)
         self.text_area.setGeometry(label_length, 5, text_length, 30)
         
         self.setGeometry(x, y, label_length + text_length, 40)
@@ -23,24 +24,24 @@ class NamedTextArea(gui.QWidget):
         return str(self.text_area.text())
 
 
-class NamedSlider(gui.QWidget):
+class NamedSlider(widgets.QWidget):
     def __init__(self, parent, resolution):
-        super(gui.QWidget, self).__init__(parent=parent)
+        super(widgets.QWidget, self).__init__(parent=parent)
         self.resolution = resolution
 
     def init_gui(self, text, x, y, label_length=30, slider_length=150, text_length=30):
-        label = gui.QLabel(self)
+        label = widgets.QLabel(self)
         label.setText(text)
         label.setGeometry(0, 5, label_length, 30)
 
-        self.slider = gui.QSlider(self)
+        self.slider = widgets.QSlider(self)
         self.slider.setOrientation(core.Qt.Horizontal)
         self.slider.setMinimum(-50)
         self.slider.setMaximum(50)
         self.slider.setTickInterval(1)
         self.slider.setGeometry(label_length, 5, slider_length, 30)
 
-        self.text_value = gui.QLineEdit(self)
+        self.text_value = widgets.QLineEdit(self)
         self.text_value.setText('0.0')
         self.text_value.setGeometry(label_length + slider_length, 5, text_length, 30)
         self.text_value.setReadOnly(True)

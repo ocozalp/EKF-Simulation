@@ -3,8 +3,7 @@ from common.entities import SampledDistribution
 from utils.probability_utils import sample_normal, get_random_element, calculate_moments, sample_multivariate_normal
 from utils.linalg_utils import get_first_eigen_val
 import numpy as np
-from multirobot import update_robot_position_estimates
-
+from .multirobot import update_robot_position_estimates
 
 class Odometry:
 
@@ -30,14 +29,14 @@ class Odometry:
             sense_lines[i] = list()
 
             # distributions for all time steps.
-            result_distributions[i] = [SampledDistribution(j) for j in xrange(len(robot_points))]
+            result_distributions[i] = [SampledDistribution(j) for j in range(len(robot_points))]
             result_distributions[i][0].points.append((x0, y0, 0))
 
             prev_theta_values[i] = 0
 
         max_t_index = max([len(robot_points) for i, robot_points in self.points])
 
-        for i in xrange(1, max_t_index):
+        for i in range(1, max_t_index):
             last_positions = dict()
 
             for j, robot_points in self.points:
@@ -53,7 +52,7 @@ class Odometry:
                 else:
                     current_theta = 0
 
-                for random_sample in xrange(number_of_samples):
+                for random_sample in range(number_of_samples):
                     random_element = get_random_element(result_distributions[j][i-1].points)
                     result_distributions[j][i].points.extend(self.eval_sample(1, robot_points[i-1], point,
                                                                               random_element, current_theta,
@@ -118,7 +117,7 @@ class Odometry:
     def eval_sample(self, number_of_samples, odometry_prev, odometry_current, current, current_theta, next_theta):
         list_of_results = list()
 
-        for i in xrange(number_of_samples):
+        for i in range(number_of_samples):
             list_of_results.append(self.sample_point(odometry_prev, odometry_current, current, current_theta, next_theta))
 
         return list_of_results
